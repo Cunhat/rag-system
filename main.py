@@ -1,47 +1,19 @@
 import logging
-from fastapi import FastAPI
+import os
+import urllib.parse
+
+import httpx
 import inngest
 import inngest.fast_api
 from dotenv import load_dotenv
-import uuid
-from data_loader import load_and_chunk_pdf, embed_texts
-from vector_db import QdrantStorage
-from custom_types import RAGSearchResult, RAGUpsertResult, RAGChunkAndSrc
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+from inngest_app import inngest_client
+from ingest_pdf.ingestion import rag_ingest_pdf
 from rag_query import run_rag_query
 
 load_dotenv()
-
-inngest_client = inngest.Inngest(
-    app_id="rag_app",
-    logger=logging.getLogger("uvicorn"),
-    is_production=False,
-    serializer=inngest.PydanticSerializer()
-)
-
-@inngest_client.create_function(
-    fn_id="RAG: Ingest PDF",
-    trigger=inngest.TriggerEvent(event="rag/ingest_pdf"),
-)
-async def rag_ingest_pdf(ctx: inngest.Context):
-    def _load(ctx: inngest.Context) -> RAGChunkAndSrc:
-        pdf_path = ctx.event.data["pdf_path"]
-        source_id = ctx.event.data.get("source_id", pdf_path)
-        chunks = load_and_chunk_pdf(pdf_path)
-        return RAGChunkAndSrc(chunks=chunks, source_id=source_id)
-
-    def _upsert(chunks_and_src: RAGChunkAndSrc) -> RAGUpsertResult:
-        chunks = chunks_and_src.chunks
-        source_id = chunks_and_src.source_id
-        vecs = embed_texts(chunks)
-        ids = [str(uuid.uuid5(uuid.NAMESPACE_URL, f"{source_id}:{i}")) for i in range(len(chunks))]
-        payloads = [{"source": source_id, "text": chunks[i]} for i in range(len(chunks))]
-        QdrantStorage().upsert(ids, vecs, payloads)
-        return RAGUpsertResult(ingested=len(chunks))
-
-    chunks_and_src = await ctx.step.run("load-and-chunk", lambda: _load(ctx), output_type=RAGChunkAndSrc)
-    ingested = await ctx.step.run("embed-and-upsert", lambda: _upsert(chunks_and_src), output_type=RAGUpsertResult)
-    return ingested.model_dump()
 
 @inngest_client.create_function(
     fn_id="RAG: Query PDF",
@@ -58,9 +30,15 @@ class QueryBody(BaseModel):
     question: str
     top_k: int = 5
 
-
 @app.post("/query")
-def query(body: QueryBody):
-    return run_rag_query(body.question, body.top_k)
+async def query(body: QueryBody):
+    ids = await inngest_client.send(
+        inngest.Event(
+            name="rag/query_pdf_ai",
+            data={"question": body.question, "top_k": body.top_k},
+        )
+    )
+    return {"event_id": ids[0]}
+
 
 inngest.fast_api.serve(app, inngest_client, [rag_ingest_pdf, rag_query_pdf_ai])

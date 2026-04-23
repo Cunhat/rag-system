@@ -2,7 +2,7 @@ import os
 
 from openai import OpenAI
 
-from data_loader import embed_texts
+from ingest_pdf.data_loader import embed_texts
 from vector_db import QdrantStorage
 
 

@@ -36,4 +36,5 @@ def run_rag_query(question: str, top_k: int = 5) -> dict:
         ],
     )
     answer = (res.choices[0].message.content or "").strip()
+    
     return {"answer": answer, "sources": sources, "num_contexts": len(contexts)}

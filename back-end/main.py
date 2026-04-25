@@ -12,6 +12,8 @@ from inngest_app import inngest_client
 from ingest_pdf.ingestion import rag_ingest_pdf
 from rag_query import run_rag_query
 
+from qdrant_client import QdrantClient
+
 load_dotenv()
 
 UPLOAD_DIR = Path(os.getenv("PDF_UPLOAD_DIR", "uploads/pdfs"))
@@ -77,5 +79,12 @@ async def query(body: QueryBody):
     )
     return {"event_id": ids[0]}
 
+
+@app.get("/collections")
+async def get_collections():
+    qdrantCLient = QdrantClient(url="http://localhost:6333")
+    collections = qdrantCLient.get_collections().collections
+
+    return [collection.name for collection in collections]
 
 inngest.fast_api.serve(app, inngest_client, [rag_ingest_pdf, rag_query_pdf_ai])

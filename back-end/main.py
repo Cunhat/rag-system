@@ -84,10 +84,28 @@ async def query(body: QueryBody):
 
 @app.get("/collections")
 async def get_collections():
-    qdrant_client = QdrantClient(url="http://localhost:6333")
-    collections = qdrant_client.get_collections().collections
+    try:
+        qdrant_client = QdrantClient(url="http://localhost:6333")
+        collections = qdrant_client.get_collections().collections
 
-    return [collection.name for collection in collections]
+        return [collection.name for collection in collections]
+    except UnexpectedResponse as error:
+        structured_error = error.structured()
+        error_message = structured_error.get("status", {}).get("error", str(error))
+
+        return JSONResponse(
+            status_code=error.status_code or 500,
+            content={
+                "message": error_message or "Failed to get collections",
+            },
+        )
+    except Exception as error:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "message": str(error)
+            },
+        )
 
 class CreateCollectionBody(BaseModel):
     name: str
@@ -106,16 +124,14 @@ async def create_collection(body: CreateCollectionBody):
         return JSONResponse(
             status_code=error.status_code or 500,
             content={
-                "message": "Failed to create collection",
-                "error": error_message,
+                "message": error_message or "Failed to create collection"
             },
         )
     except Exception as error:
         return JSONResponse(
             status_code=500,
             content={
-                "message": "Failed to create collection",
-                "error": str(error),
+                "message": str(error)
             },
         )
 

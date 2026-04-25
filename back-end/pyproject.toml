@@ -15,4 +15,5 @@ dependencies = [
     "qdrant-client>=1.17.1",
     "streamlit>=1.56.0",
     "uvicorn>=0.44.0",
+    "python-multipart>=0.0.26",
 ]

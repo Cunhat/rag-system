@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, FileText, ArrowLeft, Upload, Hash, HardDrive } from "lucide-react";
+import {
+  ChevronRight,
+  FileText,
+  ArrowLeft,
+  Upload,
+  Hash,
+  HardDrive,
+} from "lucide-react";
 import { COLLECTIONS, FILES_BY_COLLECTION } from "../../lib/mock-data";
+import { PageContainer } from "#/components/page-container";
 
 export const Route = createFileRoute("/collections/$collection")({
   component: CollectionDetail,
@@ -22,13 +30,15 @@ function CollectionDetail() {
   if (!collection) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <p className="font-mono text-sm text-muted-foreground">Collection not found.</p>
+        <p className="font-mono text-sm text-muted-foreground">
+          Collection not found.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <PageContainer>
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
         <Link to="/" className="hover:text-foreground transition-colors">
@@ -70,9 +80,16 @@ function CollectionDetail() {
       {/* File list */}
       {files.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 py-16 text-center">
-          <FileText className="mb-3 h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
-          <p className="font-mono text-sm text-muted-foreground">No files yet</p>
-          <p className="mt-1 font-mono text-xs text-muted-foreground/60">Upload a PDF to get started</p>
+          <FileText
+            className="mb-3 h-8 w-8 text-muted-foreground/40"
+            strokeWidth={1.5}
+          />
+          <p className="font-mono text-sm text-muted-foreground">
+            No files yet
+          </p>
+          <p className="mt-1 font-mono text-xs text-muted-foreground/60">
+            Upload a PDF to get started
+          </p>
         </div>
       ) : (
         <ul className="space-y-1.5">
@@ -81,7 +98,10 @@ function CollectionDetail() {
               <div className="group flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3 transition-colors duration-150 hover:border-border hover:bg-accent/20">
                 {/* Icon */}
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-border/60 bg-muted/40">
-                  <FileText className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
+                  <FileText
+                    className="h-3.5 w-3.5 text-muted-foreground"
+                    strokeWidth={1.75}
+                  />
                 </div>
 
                 {/* Filename */}
@@ -108,6 +128,6 @@ function CollectionDetail() {
           ))}
         </ul>
       )}
-    </div>
+    </PageContainer>
   );
 }

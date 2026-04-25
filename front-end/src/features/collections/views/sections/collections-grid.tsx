@@ -8,7 +8,7 @@ type Props = {
 
 export function CollectionsGrid({ collections }: Props) {
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       {collections.map((col) => (
         <li key={col.id}>
           <Link

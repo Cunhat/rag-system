@@ -1,14 +1,21 @@
+import { PageContainer } from "@/components/page-container";
 import { COLLECTIONS } from "@/lib/mock-data";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { LayoutGrid, List, Plus } from "lucide-react";
 import { useState } from "react";
+import { getCollections } from "../server/functions";
 import type { FolderView } from "../types";
-import { PageContainer } from "@/components/page-container";
 import { CollectionsGrid } from "./sections/collections-grid";
 import { CollectionsList } from "./sections/collections-list";
 
 export const FolderSystemView = () => {
   const [view, setView] = useState<FolderView>("grid");
-  const totalFiles = COLLECTIONS.reduce((n, c) => n + c.fileCount, 0);
+
+  const collections = useSuspenseQuery(getCollections);
+
+  console.log(collections.data);
+
+  const totalFiles = collections.data.length;
 
   return (
     <PageContainer>

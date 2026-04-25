@@ -2,6 +2,7 @@ import os
 import uuid
 from pathlib import Path
 
+from fastapi.responses import JSONResponse
 import inngest
 import inngest.fast_api
 from dotenv import load_dotenv
@@ -13,6 +14,7 @@ from ingest_pdf.ingestion import rag_ingest_pdf
 from rag_query import run_rag_query
 
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
 
 load_dotenv()
 
@@ -82,9 +84,39 @@ async def query(body: QueryBody):
 
 @app.get("/collections")
 async def get_collections():
-    qdrantCLient = QdrantClient(url="http://localhost:6333")
-    collections = qdrantCLient.get_collections().collections
+    qdrant_client = QdrantClient(url="http://localhost:6333")
+    collections = qdrant_client.get_collections().collections
 
     return [collection.name for collection in collections]
+
+class CreateCollectionBody(BaseModel):
+    name: str
+
+@app.post("/collection")
+async def create_collection(body: CreateCollectionBody):
+    try:
+        qdrant_client = QdrantClient(url="http://localhost:6333")
+        qdrant_client.create_collection(collection_name=body.name)
+
+        return {"message": "Collection created successfully with name: " + body.name}
+    except UnexpectedResponse as error:
+        structured_error = error.structured()
+        error_message = structured_error.get("status", {}).get("error", str(error))
+
+        return JSONResponse(
+            status_code=error.status_code or 500,
+            content={
+                "message": "Failed to create collection",
+                "error": error_message,
+            },
+        )
+    except Exception as error:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "message": "Failed to create collection",
+                "error": str(error),
+            },
+        )
 
 inngest.fast_api.serve(app, inngest_client, [rag_ingest_pdf, rag_query_pdf_ai])

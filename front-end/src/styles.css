@@ -143,3 +143,29 @@ body {
     @apply font-mono;
   }
 }
+
+/* Navbar — brand icon glow */
+.brand-glow {
+  background: radial-gradient(
+    ellipse at center,
+    oklch(0.508 0.118 165.612 / 35%) 0%,
+    transparent 70%
+  );
+}
+
+/* Navbar — active link left-accent indicator */
+.nav-link-active {
+  position: relative;
+}
+
+.nav-link-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 14px;
+  border-radius: 2px;
+  background-color: var(--primary);
+}

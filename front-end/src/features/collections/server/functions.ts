@@ -9,6 +9,6 @@ export const getCollections = queryOptions({
         "Content-Type": "application/json",
       },
     });
-    return response.json();
+    return (await response.json()) as string[];
   },
 });

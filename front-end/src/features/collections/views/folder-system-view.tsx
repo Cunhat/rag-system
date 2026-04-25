@@ -1,5 +1,4 @@
 import { PageContainer } from "@/components/page-container";
-import { COLLECTIONS } from "@/lib/mock-data";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { LayoutGrid, List, Plus } from "lucide-react";
 import { useState } from "react";
@@ -13,8 +12,6 @@ export const FolderSystemView = () => {
 
   const collections = useSuspenseQuery(getCollections);
 
-  console.log(collections.data);
-
   const totalFiles = collections.data.length;
 
   return (
@@ -25,7 +22,7 @@ export const FolderSystemView = () => {
             Collections
           </h1>
           <p className="mt-1 font-mono text-xs text-muted-foreground">
-            {COLLECTIONS.length} collections · {totalFiles} files
+            {totalFiles} collections
           </p>
         </div>
 
@@ -69,9 +66,9 @@ export const FolderSystemView = () => {
       </div>
 
       {view === "grid" ? (
-        <CollectionsGrid collections={COLLECTIONS} />
+        <CollectionsGrid collections={collections.data} />
       ) : (
-        <CollectionsList collections={COLLECTIONS} />
+        <CollectionsList collections={collections.data} />
       )}
     </PageContainer>
   );

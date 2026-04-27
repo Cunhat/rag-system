@@ -151,4 +151,34 @@ async def create_collection(body: CreateCollectionBody):
             },
         )
 
+@app.get("/collection/{name}")
+async def get_collection(name: str):
+    try:
+        qdrant_client = QdrantClient(url="http://localhost:6333")
+        points = qdrant_client.query_points(collection_name=name)
+
+        files = set[str] ()
+        for point in points.points:
+            file_name = point.payload.get("source", "").split("/")[-1]
+            files.add(file_name)
+
+        return {"files": list(files)}
+    except UnexpectedResponse as error:
+        structured_error = error.structured()
+        error_message = structured_error.get("status", {}).get("error", str(error))
+
+        return JSONResponse(
+            status_code=error.status_code or 500,
+            content={
+                "message": error_message or "Failed to get collection"
+            },
+        )
+    except Exception as error:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "message": str(error)
+            },
+        )
+
 inngest.fast_api.serve(app, inngest_client, [rag_ingest_pdf, rag_query_pdf_ai])

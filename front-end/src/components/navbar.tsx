@@ -4,7 +4,7 @@ import { Brain } from "lucide-react";
 export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6">
+      <div className="flex h-14 items-center gap-6 px-6">
         {/* Brand */}
         <Link
           to="/"

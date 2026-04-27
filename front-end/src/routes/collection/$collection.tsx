@@ -13,6 +13,5 @@ export const Route = createFileRoute("/collection/$collection")({
 });
 
 function CollectionDetail() {
-  const { collection } = Route.useParams();
-  return <CollectionView collection={collection} />;
+  return <CollectionView />;
 }

@@ -5,15 +5,6 @@ type Props = {
 };
 
 export const FilesList = ({ files }: Props) => {
-  if (files.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-12 text-center">
-        <FileText className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.5} />
-        <p className="font-mono text-sm text-muted-foreground">No files yet</p>
-      </div>
-    );
-  }
-
   return (
     <ul className="flex flex-col gap-1">
       {files.map((file) => (
@@ -23,7 +14,10 @@ export const FilesList = ({ files }: Props) => {
               className="h-4 w-4 shrink-0 text-muted-foreground"
               strokeWidth={1.5}
             />
-            <span className="truncate font-mono text-sm text-foreground" title={file}>
+            <span
+              className="truncate font-mono text-sm text-foreground"
+              title={file}
+            >
               {file}
             </span>
           </div>

@@ -4,8 +4,9 @@ import { LayoutGrid, List, Plus } from "lucide-react";
 import { useState } from "react";
 import { getCollections } from "../server/functions";
 import type { FolderView } from "../types";
-import { CollectionsGrid } from "./sections/collections-grid";
-import { CollectionsList } from "./sections/collections-list";
+import { CollectionsGrid } from "../sections/collections-grid";
+import { CollectionsList } from "../sections/collections-list";
+import { CreateCollectionDialog } from "../components/create-collection-dialog";
 
 export const FolderSystemView = () => {
   const [view, setView] = useState<FolderView>("grid");
@@ -55,13 +56,17 @@ export const FolderSystemView = () => {
             </button>
           </div>
 
-          <button
-            type="button"
-            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-mono text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            <Plus className="h-3.5 w-3.5" strokeWidth={2} />
-            New collection
-          </button>
+          <CreateCollectionDialog
+            trigger={
+              <button
+                type="button"
+                className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-mono text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                New collection
+              </button>
+            }
+          />
         </div>
       </div>
 

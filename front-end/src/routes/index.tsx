@@ -7,6 +7,9 @@ export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(getCollections);
   },
+  errorComponent: ({ error }) => {
+    return <div>Error: {error.message}</div>;
+  },
 });
 
 function Home() {

@@ -11,7 +11,7 @@ export function CollectionsList({ collections }: Props) {
       {collections.map((col) => (
         <li key={col}>
           <Link
-            to="/collections/$collection"
+            to="/collection/$collection"
             params={{ collection: col }}
             className="group flex items-center gap-4 rounded-lg border border-border/60 bg-card px-4 py-3.5 transition-all duration-150 hover:border-primary/30 hover:bg-accent/30"
           >

@@ -2,7 +2,7 @@ import os
 import uuid
 from pathlib import Path
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import inngest
 import inngest.fast_api
 from dotenv import load_dotenv
@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from inngest_app import inngest_client
 from ingest_pdf.ingestion import rag_ingest_pdf
-from rag_query import run_rag_query
+from rag_query import run_rag_query, stream_rag_query
 
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -46,12 +46,44 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["x-vercel-ai-ui-message-stream"],
 )
 
 
 class QueryBody(BaseModel):
     question: str
     top_k: int = 5
+
+
+class ChatMessage(BaseModel):
+    role: str | None = None
+    content: str | None = None
+    parts: list[dict] | None = None
+
+
+class QueryStreamBody(BaseModel):
+    question: str | None = None
+    messages: list[ChatMessage] | None = None
+    top_k: int = 5
+
+
+def get_stream_question(body: QueryStreamBody) -> str:
+    if body.question:
+        return body.question
+
+    if not body.messages:
+        raise HTTPException(status_code=400, detail="Question or messages are required")
+
+    for message in reversed(body.messages):
+        if message.parts:
+            for part in message.parts:
+                if part.get("type") == "text" and part.get("text"):
+                    return part["text"]
+
+        if message.content:
+            return message.content
+
+    raise HTTPException(status_code=400, detail="No text question found")
 
 
 @app.post("/ingest/pdf")
@@ -96,6 +128,22 @@ async def query(body: QueryBody):
         )
     )
     return {"event_id": ids[0]}
+
+
+@app.post("/query/stream")
+async def query_stream(body: QueryStreamBody):
+    question = get_stream_question(body)
+
+    return StreamingResponse(
+        stream_rag_query(question, body.top_k),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "x-vercel-ai-ui-message-stream": "v1",
+        },
+    )
 
 
 @app.get("/collections")

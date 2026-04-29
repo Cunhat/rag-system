@@ -15,6 +15,7 @@ import {
   PromptInputTextarea,
   type PromptInputMessage,
 } from "#/components/ai-elements/prompt-input";
+import { Spinner } from "#/components/ui/spinner";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { MessageSquare } from "lucide-react";
@@ -70,6 +71,7 @@ export default function Chat() {
                 </Message>
               ))
             )}
+            {status === "submitted" && <Spinner />}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>

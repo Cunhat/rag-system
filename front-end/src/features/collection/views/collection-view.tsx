@@ -3,8 +3,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { FolderOpen } from "lucide-react";
 import { getCollection } from "../server/functions";
 import { FilesList } from "../sections/files-list";
-import { Route } from "#/routes/collection/$collection";
+import { Route } from "@/routes/collection/$collection";
 import { CollectionDetailsHeader } from "../components/collection-details-header";
+import Chat from "#/features/chat/views/chat";
 
 export const CollectionView = () => {
   const { collection } = Route.useParams();
@@ -38,14 +39,14 @@ export const CollectionView = () => {
   return (
     <PageContainer>
       <CollectionDetailsHeader collection={collection} files={data.files} />
-      <div className="grid grid-cols-[1fr_3fr] gap-6">
+      <div className="grid flex-1 grid-cols-[1fr_3fr] gap-6">
         <div className="flex flex-col gap-3">
           <h2 className="font-mono text-sm font-medium text-foreground">
             Files
           </h2>
           <FilesList files={data.files} />
         </div>
-        <div />
+        <Chat />
       </div>
     </PageContainer>
   );

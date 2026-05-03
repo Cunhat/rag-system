@@ -157,15 +157,15 @@ export function UploadPdfDialog({ collection }: UploadPdfDialogProps) {
           </div>
 
           {files.length > 0 && (
-            <ul className="flex  flex-col gap-2">
+            <ul className="flex flex-col gap-2">
               {files.map((file, index) => (
                 <li
-                  className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3"
+                  className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-border bg-background p-3"
                   key={`${file.name}-${file.lastModified}`}
                 >
-                  <FileTextIcon className="size-4 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-mono text-xs font-medium text-foreground">
+                  <FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <p className="truncate text-xs font-medium text-foreground">
                       {file.name}
                     </p>
                     <p className="font-mono text-xs text-muted-foreground">
@@ -173,6 +173,7 @@ export function UploadPdfDialog({ collection }: UploadPdfDialogProps) {
                     </p>
                   </div>
                   <Button
+                    className="shrink-0"
                     aria-label={`Remove ${file.name}`}
                     disabled={mutation.isPending}
                     onClick={() => removeFile(index)}

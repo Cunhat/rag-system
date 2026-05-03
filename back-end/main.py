@@ -17,9 +17,40 @@ from rag_query import run_rag_query, stream_rag_query
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 
+from vector_db import QdrantStorage
+
+
+
+
 load_dotenv()
 
 UPLOAD_DIR = Path(os.getenv("PDF_UPLOAD_DIR", "uploads/pdfs"))
+
+QDRANT_URL = "http://localhost:6333"
+
+
+def require_existing_qdrant_collection(name: str) -> None:
+    try:
+        client = QdrantClient(url=QDRANT_URL)
+        if not client.collection_exists(collection_name=name):
+            raise HTTPException(
+                status_code=404,
+                detail=f'Collection "{name}" does not exist',
+            )
+    except HTTPException:
+        raise
+    except UnexpectedResponse as error:
+        structured_error = error.structured()
+        error_message = structured_error.get("status", {}).get("error", str(error))
+        raise HTTPException(
+            status_code=error.status_code or 502,
+            detail=error_message or "Failed to verify collection",
+        ) from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        ) from error
 
 
 @inngest_client.create_function(
@@ -87,10 +118,19 @@ def get_stream_question(body: QueryStreamBody) -> str:
 
 
 @app.post("/ingest/pdf")
-async def ingest_pdf(file: UploadFile = File(...), source_id: str | None = Form(None)):
+async def ingest_pdf(file: UploadFile = File(...), source_id: str | None = Form(None), collection: str | None = Form(None)):
     filename = file.filename or "uploaded.pdf"
     if file.content_type != "application/pdf" and not filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
+
+    resolved_collection = (collection or "").strip()
+    if not resolved_collection:
+        raise HTTPException(
+            status_code=400,
+            detail="collection is required",
+        )
+
+    require_existing_qdrant_collection(resolved_collection)
 
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     pdf_path = (UPLOAD_DIR / f"{uuid.uuid4()}.pdf").resolve()
@@ -108,6 +148,7 @@ async def ingest_pdf(file: UploadFile = File(...), source_id: str | None = Form(
             data={
                 "pdf_path": str(pdf_path),
                 "source_id": source_id or filename,
+                "collection": resolved_collection,
             },
         )
     )
@@ -116,6 +157,7 @@ async def ingest_pdf(file: UploadFile = File(...), source_id: str | None = Form(
         "event_id": ids[0],
         "source_id": source_id or filename,
         "pdf_path": str(pdf_path),
+        "collection": resolved_collection,
     }
 
 
@@ -149,7 +191,7 @@ async def query_stream(body: QueryStreamBody):
 @app.get("/collections")
 async def get_collections():
     try:
-        qdrant_client = QdrantClient(url="http://localhost:6333")
+        qdrant_client = QdrantClient(url=QDRANT_URL)
         collections = qdrant_client.get_collections().collections
 
         return [collection.name for collection in collections]
@@ -177,8 +219,8 @@ class CreateCollectionBody(BaseModel):
 @app.post("/collection")
 async def create_collection(body: CreateCollectionBody):
     try:
-        qdrant_client = QdrantClient(url="http://localhost:6333")
-        qdrant_client.create_collection(collection_name=body.name)
+        qdrant_client = QdrantStorage(collection=body.name)
+       
 
         return {"message": "Collection created successfully with name: " + body.name}
     except UnexpectedResponse as error:
@@ -202,7 +244,7 @@ async def create_collection(body: CreateCollectionBody):
 @app.get("/collection/{name}")
 async def get_collection(name: str):
     try:
-        qdrant_client = QdrantClient(url="http://localhost:6333")
+        qdrant_client = QdrantClient(url=QDRANT_URL)
         points = qdrant_client.query_points(collection_name=name)
 
         files = set[str] ()
